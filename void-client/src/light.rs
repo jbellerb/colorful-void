@@ -16,38 +16,15 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-use std::fmt;
+use crate::proto::{Brightness, RGB};
 
 use log::trace;
-
-#[derive(Clone, Default, Debug)]
-pub struct RGB {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-}
-
-impl From<[u8; 4]> for RGB {
-    fn from(array: [u8; 4]) -> Self {
-        RGB {
-            r: array[0],
-            g: array[1],
-            b: array[2],
-        }
-    }
-}
-
-impl fmt::Display for RGB {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
-    }
-}
 
 #[derive(Debug)]
 pub struct Light {
     array: usize,
     active: bool,
-    brightness: u8,
+    brightness: Brightness,
     color: RGB,
 }
 
@@ -58,14 +35,14 @@ impl Light {
         Light {
             array,
             active: false,
-            brightness: 255,
+            brightness: Brightness::default(),
             color: RGB::default(),
         }
     }
 
     pub fn set_active(&mut self, active: bool) {
         trace!(
-            "Setting light state to {}",
+            "Setting light power to {}",
             if active { "on" } else { "off" }
         );
 
@@ -76,14 +53,14 @@ impl Light {
         self.active
     }
 
-    pub fn set_brightness(&mut self, brightness: u8) {
+    pub fn set_brightness(&mut self, brightness: Brightness) {
         trace!("Setting light to {} brightness", brightness);
 
         self.brightness = brightness;
     }
 
-    pub fn get_brightness(&self) -> u8 {
-        self.brightness
+    pub fn get_brightness(&self) -> Brightness {
+        self.brightness.clone()
     }
 
     pub fn set_color(&mut self, color: RGB) {
