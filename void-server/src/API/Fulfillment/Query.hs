@@ -14,8 +14,29 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-module API.Server where
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
-import API.Token
+module API.Fulfillment.Query where
 
-type API = TokenAPI
+import API.Client
+import Data.Aeson
+import Data.Text
+
+data DeviceStatus
+  = StatusSuccess { status :: LightStatus }
+  | StatusOffline
+  deriving (Show)
+
+instance ToJSON DeviceStatus where
+  toJSON StatusSuccess{ status = LightStatus{..} } = object
+    [ "online" .= True
+    , "status" .= ("SUCCESS" :: Text)
+    , "on" .= active
+    , "brightness" .= brightness
+    , "color" .= object [ "spectrumRgb" .= color ]
+    ]
+  toJSON StatusOffline = object
+    [ "online" .= False
+    , "status" .= ("OFFLINE" :: Text)
+    ]

@@ -1,7 +1,7 @@
 -- Copyright (C) 2020  Jared Beller
--- This file is part of void-client
+-- This file is part of void-server
 --
--- void-client is free software: you can redistribute it and/or modify
+-- void-server is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
@@ -23,12 +23,13 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Token where
+module API.Token where
 
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Data.Aeson
+import Data.Aeson.Types (Parser)
 import Data.Maybe
 import Data.Text
 import Data.Text.Encoding
@@ -45,30 +46,26 @@ import qualified Data.Map as M
 expiry :: Int
 expiry = 1 * 60 * 60
 
-data TokenType = Refresh | Access
-  deriving (Eq, Show, Generic)
-
-instance ToJSON TokenType where
-  toJSON Refresh = String "r"
-  toJSON Access = String "a"
-
-instance FromJSON TokenType where
-  parseJSON (String "r") = return Refresh
-  parseJSON (String "a") = return Access
-  parseJSON _ = fail "kind must be r or a"
-
-data Token = Token
-  { kind :: TokenType
-  , userID :: A.UserID
-  } deriving (Eq, Show, Generic)
+data Token
+  = AccessToken { userID :: A.UserID }
+  | RefreshToken { clientID :: String, userID :: A.UserID }
+  deriving (Show)
 
 instance FromJSON Token where
-    parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+  parseJSON = withObject "access token or refresh token" $ \o -> do
+    tokenType <- o .: "t" :: Parser Text
+    case tokenType of
+      "a" -> AccessToken <$> o .: "u"
+      "r" -> RefreshToken <$> o .: "c" <*> o .: "u"
+      _ -> fail ("unknown token type: " ++ (show tokenType))
 
 instance FromJWT Token
 
 instance ToJSON Token where
-    toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+  toJSON AccessToken{..} =
+    object [ "t" .= ("a" :: Text), "u" .= userID ]
+  toJSON RefreshToken{..} =
+    object [ "t" .= ("r" :: Text), "c" .= clientID, "u" .= userID ]
 
 instance ToJWT Token
 
@@ -88,9 +85,9 @@ tokenAPI jwts AuthExchange{..} = (=<<) handleError $ runMaybeT $ do
   time <- liftIO getCurrentTime
   let expire = addUTCTime (realToFrac expiry) time
   accessToken <-
-    unpackEither =<< (liftIO $ makeJWT (Token Access userID) jwts (Just expire))
+    unpackEither =<< (liftIO $ makeJWT (AccessToken userID) jwts (Just expire))
   refreshToken <-
-    unpackEither =<< (liftIO $ makeJWT (Token Refresh userID) jwts Nothing)
+    unpackEither =<< (liftIO $ makeJWT (RefreshToken clientID userID) jwts Nothing)
 
   return $
     TokenSuccess
@@ -101,14 +98,15 @@ tokenAPI jwts RefreshExchange{..} = (=<<) handleError $ runMaybeT $ do
   guard(clientID == A.clientID)
   guard(clientSecret == A.clientSecret)
 
-  Token{..} <- MaybeT $ liftIO $ verifyJWT jwts $ BS.pack refreshToken
-  guard(kind == Refresh)
+  RefreshToken{clientID = tokenClientID, ..} <-
+    MaybeT $ liftIO $ verifyJWT jwts $ BS.pack refreshToken
+  guard(tokenClientID == clientID)
   guard(M.member (userID) A.users)
 
   time <- liftIO getCurrentTime
   let expire = addUTCTime (realToFrac expiry) time
   accessToken <-
-    unpackEither =<< (liftIO $ makeJWT (Token Access userID) jwts (Just expire))
+    unpackEither =<< (liftIO $ makeJWT (AccessToken userID) jwts (Just expire))
 
   return $ TokenSuccess (decodeUtf8 $ BSL.toStrict accessToken) Nothing expiry
 
@@ -119,7 +117,7 @@ handleError :: Maybe a -> Handler a
 handleError (Just x) = return x
 handleError Nothing  = throwError $ err400 { errBody = encode TokenError }
 
--- Request types
+-- Request/response types
 
 data TokenRequest
   = AuthExchange
@@ -150,7 +148,7 @@ instance FromForm TokenRequest where
           <$> parseUnique "client_id" f
           <*> parseUnique "client_secret" f
           <*> parseUnique "refresh_token" f
-      _ -> fail "grant_type must be authorization_code or refresh_token"
+      _ -> fail ("unknown grant_type: " ++ (show kind))
 
 data TokenResponse
   = TokenError
@@ -163,9 +161,9 @@ data TokenResponse
 
 instance ToJSON TokenResponse where
   toJSON TokenError =
-    object [ "error" .= ("invalid_grant" :: String) ]
+    object [ "error" .= ("invalid_grant" :: Text) ]
   toJSON TokenSuccess{..} = object $
-    [ "token_type" .= ("Bearer" :: String)
+    [ "token_type" .= ("Bearer" :: Text)
     , "access_token" .= accessToken
     , "expires_in" .= expiresIn
     ] ++ (maybe [] (\a -> ["refresh_token" .= a]) refreshToken)

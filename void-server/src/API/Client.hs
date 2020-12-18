@@ -1,7 +1,7 @@
 -- Copyright (C) 2020  Jared Beller
--- This file is part of void-client
+-- This file is part of void-server
 --
--- void-client is free software: you can redistribute it and/or modify
+-- void-server is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
@@ -29,7 +29,7 @@ import Servant
 import Servant.Client
 
 type ClientAPI =
-  Get '[JSON] StatusRequest :<|>
+  Get '[JSON] LightStatus :<|>
   "active" :> Get '[JSON] ActiveRequest :<|>
   "active" :> ReqBody '[JSON] ActiveRequest :> Put '[JSON] ActiveRequest :<|>
   "brightness" :> Get '[JSON] BrightnessRequest :<|>
@@ -37,16 +37,16 @@ type ClientAPI =
   "color" :> Get '[JSON] ColorRequest :<|>
   "color" :> ReqBody '[JSON] ColorRequest :> Put '[JSON] ColorRequest
 
--- API handler
+-- Client API handler
 
 clientAPI :: Proxy ClientAPI
 clientAPI = Proxy
 
 getStatus :<|> getActive :<|> setActive :<|> getBrightness :<|> setBrightness :<|> getColor :<|> setColor = client clientAPI
 
--- Request types
+-- Request/response types
 
-data StatusRequest = StatusRequest
+data LightStatus = LightStatus
   { active :: Bool
   , brightness :: Int
   , color :: Int

@@ -27,6 +27,10 @@ executable void-server
   hs-source-dirs:      src
   other-modules:       Auth
                      , API.Client
+                     , API.Fulfillment
+                     , API.Fulfillment.Execute
+                     , API.Fulfillment.Query
+                     , API.Fulfillment.Sync
                      , API.Server
-                     , Token
+                     , API.Token
   default-language:    Haskell2010

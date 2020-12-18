@@ -1,7 +1,7 @@
 -- Copyright (C) 2020  Jared Beller
--- This file is part of void-client
+-- This file is part of void-server
 --
--- void-client is free software: you can redistribute it and/or modify
+-- void-server is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
@@ -18,10 +18,10 @@ module Main where
 
 import API.Client
 import API.Server
+import API.Token
 import Network.Wai.Handler.Warp (run)
 import Servant
 import Servant.Auth.Server
-import Token
 
 main :: IO ()
 main = do
