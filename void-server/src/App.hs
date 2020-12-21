@@ -14,30 +14,16 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-{-# LANGUAGE RecordWildCards #-}
+module App where
 
-module Main where
-
-import App
-import Network.HTTP.Client (defaultManagerSettings, newManager)
-import Network.Wai
-import Network.Wai.Handler.Warp
-import Network.Wai.Logger (withStdoutLogger)
+import Control.Monad.Trans.Reader (ReaderT)
+import Network.HTTP.Client (Manager)
+import Servant
 import Servant.Auth.Server
-import Server
 
-mkEnv :: IO Env
-mkEnv = do
-  jwtKey <- generateKey
-  manager <- newManager defaultManagerSettings
-  let jwts = defaultJWTSettings jwtKey
+data Env = Env
+  { jwts :: JWTSettings
+  , manager :: Manager
+  }
 
-  return Env{..}
-
-runServer :: Env -> IO ()
-runServer env = withStdoutLogger $ \logger -> do
-  let settings = setPort 8080 $ setLogger logger defaultSettings
-  runSettings settings $ app env
-
-main :: IO ()
-main = mkEnv >>= runServer
+type App = ReaderT Env Handler

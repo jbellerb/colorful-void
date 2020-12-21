@@ -24,9 +24,11 @@
 
 module API.Fulfillment where
 
+import App
 import API.Fulfillment.Execute
 import API.Fulfillment.Query
 import API.Fulfillment.Sync
+import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Text
@@ -43,8 +45,17 @@ type FulfillmentAPI =
 
 -- Fulfillment API handler
 
-fulfillmentAPI :: JWTSettings -> Server FulfillmentAPI
-fulfillmentAPI jwts FulfillmentRequest{..} = undefined
+fulfillmentAPI :: ServerT FulfillmentAPI App
+fulfillmentAPI FulfillmentRequest{inputs = intent : _, ..} = do
+  liftIO $ print intent
+  let userID = A.UserID "0" -- TODO: verify JWT and extract userID from that
+  response <- case intent of
+    SyncIntent -> SyncResponse userID <$> handleSync userID
+    QueryIntent{..} -> QueryResponse <$> handleQuery userID devices
+    ExecuteIntent{..} -> ExecuteResponse <$> handleExecute userID commands
+  return $ FulfillmentResponse requestId response
+fulfillmentAPI _ = throwError $
+  err400 { errBody = "Error in $.inputs: no intent provided" }
 
 -- Request/response types
 
@@ -72,15 +83,15 @@ instance FromJSON Intent where
         payload <- o .: "payload"
         commands <- payload .: "commands"
         return ExecuteIntent{..}
-      _ -> fail ("unknown intent type: " ++ (show intentType))
+      _ -> fail ("unknown intent type: " ++ show intentType)
 
 data FulfillmentResponse = FulfillmentResponse
   { requestId :: String
-  , payload :: [IntentResponse]
+  , payload :: IntentResponse
   } deriving (Show, Generic, ToJSON)
 
 data IntentResponse
-  = SyncResponse { agentUserId :: String, deviceSpecs :: [DeviceSpec] }
+  = SyncResponse { agentUserId :: A.UserID, deviceSpecs :: [DeviceSpec] }
   | QueryResponse { deviceStatuses :: M.Map String DeviceStatus }
   | ExecuteResponse { commands :: [CommandResult] }
   deriving (Show)

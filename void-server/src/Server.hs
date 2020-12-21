@@ -14,8 +14,30 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-module API.Server where
+{-# LANGUAGE TypeOperators #-}
 
+module Server where
+
+import API.Fulfillment
 import API.Token
+import App
+import Control.Monad.Trans.Reader (ReaderT, runReaderT)
+import Network.HTTP.Client (Manager)
+import Servant
+import Servant.Auth.Server
 
-type API = TokenAPI
+type API = TokenAPI :<|> FulfillmentAPI
+
+runAppAsHandler :: Env -> App a -> Handler a
+runAppAsHandler env app = runReaderT app env
+
+server :: Proxy API -> Env -> Server API
+server api env = hoistServer
+  api
+  (runAppAsHandler env)
+  (tokenAPI :<|> fulfillmentAPI)
+
+app :: Env -> Application
+app env = serve api $ server api env
+  where
+    api = Proxy :: Proxy API

@@ -19,9 +19,23 @@
 
 module API.Fulfillment.Sync where
 
+import App
 import Data.Aeson
-import Data.Text
+import Data.Maybe
+import Data.Text hiding (map)
+import Servant
 import qualified Auth as A
+import qualified Data.Map as M
+
+handleSync :: A.UserID -> App [DeviceSpec]
+handleSync userID =
+  return $ mapMaybe lookup $ M.findWithDefault [] userID A.users
+  where
+    lookup deviceID = do
+      A.Device{..} <- M.lookup deviceID A.devices
+      return $ DeviceSpec deviceID name
+
+-- Request/response types
 
 data DeviceSpec = DeviceSpec
   { deviceID :: A.DeviceID
@@ -29,8 +43,8 @@ data DeviceSpec = DeviceSpec
   } deriving (Show)
 
 instance ToJSON DeviceSpec where
-  toJSON DeviceSpec{ deviceID = A.DeviceID{..}, ..} = object
-    [ "id" .= deviceID
+  toJSON DeviceSpec{..} = object
+    [ "id" .= A.getDeviceID deviceID
     , "type" .= ("action.devices.types.LIGHT" :: Text)
     , "traits" .= (
         [ "action.devices.traits.OnOff"

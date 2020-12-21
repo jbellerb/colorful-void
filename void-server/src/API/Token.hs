@@ -16,18 +16,20 @@
 
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
 module API.Token where
 
+import App
 import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Reader (ask)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Maybe
@@ -57,7 +59,7 @@ instance FromJSON Token where
     case tokenType of
       "a" -> AccessToken <$> o .: "u"
       "r" -> RefreshToken <$> o .: "c" <*> o .: "u"
-      _ -> fail ("unknown token type: " ++ (show tokenType))
+      _ -> fail ("unknown token type: " ++ show tokenType)
 
 instance FromJWT Token
 
@@ -76,44 +78,46 @@ type TokenAPI =
 
 -- Exchange API handler
 
-tokenAPI :: JWTSettings -> Server TokenAPI
-tokenAPI jwts AuthExchange{..} = (=<<) handleError $ runMaybeT $ do
-  guard(clientID == A.clientID)
-  guard(clientSecret == A.clientSecret)
+tokenAPI :: ServerT TokenAPI App
+tokenAPI AuthExchange{..} = (=<<) handleError $ runMaybeT $ do
+  Env{jwts} <- lift ask
+  guard (clientID == A.clientID)
+  guard (clientSecret == A.clientSecret)
  
   userID <- MaybeT $ pure $ M.lookup code A.auths
   time <- liftIO getCurrentTime
   let expire = addUTCTime (realToFrac expiry) time
   accessToken <-
-    unpackEither =<< (liftIO $ makeJWT (AccessToken userID) jwts (Just expire))
+    unpackEither =<< liftIO (makeJWT (AccessToken userID) jwts (Just expire))
   refreshToken <-
-    unpackEither =<< (liftIO $ makeJWT (RefreshToken clientID userID) jwts Nothing)
+    unpackEither =<< liftIO (makeJWT (RefreshToken clientID userID) jwts Nothing)
 
   return $
     TokenSuccess
       (decodeUtf8 $ BSL.toStrict accessToken)
       (Just $ decodeUtf8 $ BSL.toStrict refreshToken)
       expiry
-tokenAPI jwts RefreshExchange{..} = (=<<) handleError $ runMaybeT $ do
-  guard(clientID == A.clientID)
-  guard(clientSecret == A.clientSecret)
+tokenAPI RefreshExchange{..} = (=<<) handleError $ runMaybeT $ do
+  Env{jwts} <- lift ask
+  guard (clientID == A.clientID)
+  guard (clientSecret == A.clientSecret)
 
   RefreshToken{clientID = tokenClientID, ..} <-
     MaybeT $ liftIO $ verifyJWT jwts $ BS.pack refreshToken
-  guard(tokenClientID == clientID)
-  guard(M.member (userID) A.users)
+  guard (tokenClientID == clientID)
+  guard (M.member userID A.users)
 
   time <- liftIO getCurrentTime
   let expire = addUTCTime (realToFrac expiry) time
   accessToken <-
-    unpackEither =<< (liftIO $ makeJWT (AccessToken userID) jwts (Just expire))
+    unpackEither =<< liftIO (makeJWT (AccessToken userID) jwts (Just expire))
 
   return $ TokenSuccess (decodeUtf8 $ BSL.toStrict accessToken) Nothing expiry
 
 unpackEither :: (Monad m) => Either b a -> MaybeT m a
 unpackEither = MaybeT . pure . either (const Nothing) Just
 
-handleError :: Maybe a -> Handler a
+handleError :: Maybe a -> App a
 handleError (Just x) = return x
 handleError Nothing  = throwError $ err400 { errBody = encode TokenError }
 
@@ -148,7 +152,7 @@ instance FromForm TokenRequest where
           <$> parseUnique "client_id" f
           <*> parseUnique "client_secret" f
           <*> parseUnique "refresh_token" f
-      _ -> fail ("unknown grant_type: " ++ (show kind))
+      _ -> fail ("unknown grant_type: " ++ show kind)
 
 data TokenResponse
   = TokenError
@@ -166,4 +170,4 @@ instance ToJSON TokenResponse where
     [ "token_type" .= ("Bearer" :: Text)
     , "access_token" .= accessToken
     , "expires_in" .= expiresIn
-    ] ++ (maybe [] (\a -> ["refresh_token" .= a]) refreshToken)
+    ] ++ maybe [] (\a -> ["refresh_token" .= a]) refreshToken

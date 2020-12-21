@@ -52,11 +52,11 @@ data LightStatus = LightStatus
   , color :: Int
   } deriving (Show, Generic, FromJSON)
 
-data ActiveRequest = ActiveRequest { value :: Bool }
+newtype ActiveRequest = ActiveRequest { value :: Bool }
   deriving (Show, Generic, FromJSON, ToJSON)
 
-data BrightnessRequest = BrightnessRequest { value :: Int }
+newtype BrightnessRequest = BrightnessRequest { value :: Int }
   deriving (Show, Generic, FromJSON, ToJSON)
 
-data ColorRequest = ColorRequest { value :: Int }
+newtype ColorRequest = ColorRequest { value :: Int }
   deriving (Show, Generic, FromJSON, ToJSON)
