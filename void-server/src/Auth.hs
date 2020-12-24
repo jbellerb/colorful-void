@@ -53,7 +53,7 @@ devices = M.fromList
   [ ( DeviceID "0",
       Device
         (BaseUrl Http "localhost" 8000 "")
-        "Colorful Void"
+        "void-01"
         (UserID "0")
     )
   ]

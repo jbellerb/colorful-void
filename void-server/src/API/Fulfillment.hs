@@ -45,16 +45,14 @@ type FulfillmentAPI =
 
 -- Fulfillment API handler
 
-fulfillmentAPI :: ServerT FulfillmentAPI App
-fulfillmentAPI FulfillmentRequest{inputs = intent : _, ..} = do
-  liftIO $ print intent
-  let userID = A.UserID "0" -- TODO: verify JWT and extract userID from that
+fulfillmentAPI :: A.UserID -> ServerT FulfillmentAPI App
+fulfillmentAPI userID FulfillmentRequest{inputs = intent : _, ..} = do
   response <- case intent of
     SyncIntent -> SyncResponse userID <$> handleSync userID
     QueryIntent{..} -> QueryResponse <$> handleQuery userID devices
     ExecuteIntent{..} -> ExecuteResponse <$> handleExecute userID commands
   return $ FulfillmentResponse requestId response
-fulfillmentAPI _ = throwError $
+fulfillmentAPI _ _ = throwError $
   err400 { errBody = "Error in $.inputs: no intent provided" }
 
 -- Request/response types
@@ -91,13 +89,13 @@ data FulfillmentResponse = FulfillmentResponse
   } deriving (Show, Generic, ToJSON)
 
 data IntentResponse
-  = SyncResponse { agentUserId :: A.UserID, deviceSpecs :: [DeviceSpec] }
+  = SyncResponse { agentUserID :: A.UserID, deviceSpecs :: [DeviceSpec] }
   | QueryResponse { deviceStatuses :: M.Map String DeviceStatus }
   | ExecuteResponse { commands :: [CommandResult] }
   deriving (Show)
 
 instance ToJSON IntentResponse where
   toJSON SyncResponse{..} =
-    object [ "agentUserID" .= agentUserId, "devices" .= deviceSpecs ]
+    object [ "agentUserId" .= agentUserID, "devices" .= deviceSpecs ]
   toJSON QueryResponse{..} = object [ "devices" .= deviceStatuses ]
   toJSON ExecuteResponse{..} = object [ "commands" .= commands ]

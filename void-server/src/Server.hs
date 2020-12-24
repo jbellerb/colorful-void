@@ -14,6 +14,8 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Server where
@@ -26,18 +28,21 @@ import Network.HTTP.Client (Manager)
 import Servant
 import Servant.Auth.Server
 
-type API = TokenAPI :<|> FulfillmentAPI
+type API = TokenAPI :<|> (Auth '[JWT] Token :> FulfillmentAPI)
+
+protected :: AuthResult Token -> ServerT FulfillmentAPI App
+protected (Authenticated AccessToken{userID}) = fulfillmentAPI userID
+protected _ = throwAll err401
 
 runAppAsHandler :: Env -> App a -> Handler a
 runAppAsHandler env app = runReaderT app env
 
-server :: Proxy API -> Env -> Server API
-server api env = hoistServer
-  api
+server :: Env -> Server API
+server env = hoistServerWithContext
+  (Proxy :: Proxy API)
+  (Proxy :: Proxy '[CookieSettings, JWTSettings])
   (runAppAsHandler env)
-  (tokenAPI :<|> fulfillmentAPI)
+  (tokenAPI :<|> protected)
 
-app :: Env -> Application
-app env = serve api $ server api env
-  where
-    api = Proxy :: Proxy API
+app :: Context '[CookieSettings, JWTSettings] -> Env -> Application
+app cfg env = serveWithContext (Proxy :: Proxy API) cfg $ server env

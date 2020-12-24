@@ -24,6 +24,7 @@ import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.Logger (withStdoutLogger)
 import Servant.Auth.Server
+import Servant.Server
 import Server
 
 mkEnv :: IO Env
@@ -37,7 +38,8 @@ mkEnv = do
 runServer :: Env -> IO ()
 runServer env = withStdoutLogger $ \logger -> do
   let settings = setPort 8080 $ setLogger logger defaultSettings
-  runSettings settings $ app env
+      cfg = defaultCookieSettings :. (jwts env) :. EmptyContext
+  runSettings settings $ app cfg env
 
 main :: IO ()
 main = mkEnv >>= runServer
