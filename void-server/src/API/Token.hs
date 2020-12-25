@@ -19,7 +19,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -29,12 +28,8 @@ import App
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Except (runExceptT)
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Reader (ask)
-import Crypto.JOSE (decodeCompact)
-import Crypto.JWT (JWTError, JWTValidationSettings, verifyClaims,
-                   defaultJWTValidationSettings)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Maybe
@@ -125,28 +120,6 @@ unpackEither = MaybeT . pure . either (const Nothing) Just
 handleError :: Maybe a -> App a
 handleError (Just x) = return x
 handleError Nothing  = throwError $ err400 { errBody = encode TokenError }
-
--- Implemented in servant-auth-server-0.4.6.0,  is not in stackage yet
-verifyJWT :: FromJWT a => JWTSettings -> BS.ByteString -> IO (Maybe a)
-verifyJWT jwtCfg input = do
-  verifiedJWT <- liftIO $ runExceptT $ do
-    unverifiedJWT <- decodeCompact (BSL.fromStrict input)
-    verifyClaims
-      (jwtSettingsToJwtValidationSettings jwtCfg)
-      (validationKeys jwtCfg)
-      unverifiedJWT
-  return $ case verifiedJWT of
-    Left (_ :: JWTError) -> Nothing
-    Right v -> case decodeJWT v of
-      Left _ -> Nothing
-      Right v' -> Just v'
-
-jwtSettingsToJwtValidationSettings :: JWTSettings -> JWTValidationSettings
-jwtSettingsToJwtValidationSettings s
-  = defaultJWTValidationSettings (toBool <$> audienceMatches s)
-  where
-    toBool Matches      = True
-    toBool DoesNotMatch = False
 
 -- Request/response types
 

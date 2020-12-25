@@ -16,8 +16,7 @@ executable void-server
                      , containers
                      , http-api-data
                      , http-client
-                     , jose
-                     , servant-auth-server
+                     , servant-auth-server >= 0.4.6.0
                      , servant-client
                      , servant-server
                      , text
