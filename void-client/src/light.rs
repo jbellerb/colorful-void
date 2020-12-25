@@ -19,10 +19,11 @@
 use crate::proto::{Brightness, RGB};
 
 use log::trace;
+use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType};
 
 #[derive(Debug)]
 pub struct Light {
-    array: usize,
+    controller: Controller,
     active: bool,
     brightness: Brightness,
     color: RGB,
@@ -30,13 +31,32 @@ pub struct Light {
 
 impl Light {
     pub fn new() -> Light {
-        let array = 0; // Placeholder for ws8212b driver
+        let mut controller = ControllerBuilder::new()
+            .freq(800000)
+            .dma(10)
+            .channel(
+                0,
+                ChannelBuilder::new()
+                    .pin(18)
+                    .count(75)
+                    .strip_type(StripType::Ws2812)
+                    .brightness(0)
+                    .build(),
+            )
+            .build()
+            .expect("[Fatal] Failed to initialize light strip");
+
+        let color = RGB::default();
+        for led in controller.leds_mut(0) {
+            *led = color.clone().into();
+        }
+        controller.render();
 
         Light {
-            array,
+            controller,
             active: false,
             brightness: Brightness::default(),
-            color: RGB::default(),
+            color,
         }
     }
 
@@ -47,6 +67,13 @@ impl Light {
         );
 
         self.active = active;
+        let true_brightness = if active {
+            self.brightness.clone().into()
+        } else {
+            0
+        };
+        self.controller.set_brightness(0, true_brightness);
+        self.controller.render();
     }
 
     pub fn get_active(&self) -> bool {
@@ -56,7 +83,9 @@ impl Light {
     pub fn set_brightness(&mut self, brightness: Brightness) {
         trace!("Setting light to {} brightness", brightness);
 
-        self.brightness = brightness;
+        self.brightness = brightness.clone();
+        self.controller.set_brightness(0, brightness.into());
+        self.controller.render();
     }
 
     pub fn get_brightness(&self) -> Brightness {
@@ -66,7 +95,11 @@ impl Light {
     pub fn set_color(&mut self, color: RGB) {
         trace!("Setting light to color {}", color);
 
-        self.color = color;
+        self.color = color.clone();
+        for led in self.controller.leds_mut(0) {
+            *led = color.clone().into();
+        }
+        self.controller.render();
     }
 
     pub fn get_color(&self) -> RGB {

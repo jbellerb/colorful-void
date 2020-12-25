@@ -23,9 +23,9 @@ use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 #[derive(Clone, Debug)]
 pub struct Brightness(u8);
 
-impl From<u8> for Brightness {
-    fn from(val: u8) -> Self {
-        Brightness(val)
+impl From<Brightness> for u8 {
+    fn from(val: Brightness) -> Self {
+        val.0
     }
 }
 
@@ -37,7 +37,7 @@ impl Default for Brightness {
 
 impl fmt::Display for Brightness {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}%", ((self.0 as u32) * 100) / 255)
+        write!(f, "{}%", ((self.0 as f32) * 100.0 / 255.0).round())
     }
 }
 
@@ -48,7 +48,7 @@ impl<'de> Deserialize<'de> for Brightness {
     {
         let val: u8 = Deserialize::deserialize(deserializer)?;
 
-        Ok(Brightness((((val as u32) * 255) / 100) as u8))
+        Ok(Brightness(((val as f32) * 255.0 / 100.0).round() as u8))
     }
 }
 
@@ -57,6 +57,6 @@ impl Serialize for Brightness {
     where
         S: Serializer,
     {
-        serializer.serialize_u8((((self.0 as u32) * 100) / 255) as u8)
+        serializer.serialize_u8(((self.0 as f32) * 100.0 / 255.0).round() as u8)
     }
 }

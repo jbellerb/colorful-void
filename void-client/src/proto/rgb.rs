@@ -20,19 +20,25 @@ use std::fmt;
 
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug)]
 pub struct RGB {
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
 
-impl From<[u8; 4]> for RGB {
-    fn from(array: [u8; 4]) -> Self {
+impl From<RGB> for [u8; 4] {
+    fn from(val: RGB) -> Self {
+        [val.b, val.g, val.r, 0]
+    }
+}
+
+impl Default for RGB {
+    fn default() -> Self {
         RGB {
-            r: array[0],
-            g: array[1],
-            b: array[2],
+            r: 255,
+            g: 255,
+            b: 255,
         }
     }
 }
