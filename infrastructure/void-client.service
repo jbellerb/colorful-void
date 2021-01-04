@@ -1,0 +1,15 @@
+[Unit]
+Description=Colorful Void device client
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/local/bin/void-client
+Environment=RUST_LOG=debug
+
+[Install]
+WantedBy=multi-user.target

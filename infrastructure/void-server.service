@@ -1,0 +1,14 @@
+[Unit]
+Description=Colorful Void control server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=nobody
+ExecStart=/usr/local/bin/void-server
+
+[Install]
+WantedBy=multi-user.target
