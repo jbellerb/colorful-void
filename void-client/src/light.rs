@@ -21,6 +21,8 @@ use crate::proto::{Brightness, RGB};
 use log::trace;
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder, StripType};
 
+const LED_COUNT: i32 = 75;
+
 #[derive(Debug)]
 pub struct Light {
     controller: Controller,
@@ -38,7 +40,7 @@ impl Light {
                 0,
                 ChannelBuilder::new()
                     .pin(18)
-                    .count(75)
+                    .count(LED_COUNT)
                     .strip_type(StripType::Ws2812)
                     .brightness(0)
                     .build(),

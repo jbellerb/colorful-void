@@ -1,0 +1,20 @@
+server {
+    listen 443 ssl;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+    }
+    
+    server_name example.com;
+}
+
+server {
+    listen 80;
+
+    if ($host = example.com) {
+        return 301 https://$host$request_uri;
+    }
+    return 404;
+
+    server_name example.com;
+}
