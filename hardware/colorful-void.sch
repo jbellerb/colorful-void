@@ -61,8 +61,6 @@ F 3 "" H 7200 4900 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	7600 3300 7700 3300
-Text GLabel 7700 3300 2    50   Input ~ 0
-LED_D
 Wire Wire Line
 	7600 3600 7700 3600
 Wire Wire Line
@@ -260,68 +258,6 @@ Wire Wire Line
 	5000 2400 5000 2500
 NoConn ~ 5000 2400
 NoConn ~ 5100 2400
-Wire Wire Line
-	2900 3750 3000 3750
-Wire Wire Line
-	3000 3750 3000 3650
-Wire Wire Line
-	2900 3850 3000 3850
-Wire Wire Line
-	3000 3850 3000 3950
-$Comp
-L power:+5V #PWR03
-U 1 1 5FDEBA13
-P 3300 3650
-F 0 "#PWR03" H 3300 3500 50  0001 C CNN
-F 1 "+5V" H 3315 3823 50  0000 C CNN
-F 2 "" H 3300 3650 50  0001 C CNN
-F 3 "" H 3300 3650 50  0001 C CNN
-	1    3300 3650
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR04
-U 1 1 5FDEC1C7
-P 3300 3950
-F 0 "#PWR04" H 3300 3700 50  0001 C CNN
-F 1 "GND" H 3305 3777 50  0000 C CNN
-F 2 "" H 3300 3950 50  0001 C CNN
-F 3 "" H 3300 3950 50  0001 C CNN
-	1    3300 3950
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:PWR_FLAG #FLG01
-U 1 1 5FDF5B6E
-P 3000 3650
-F 0 "#FLG01" H 3000 3725 50  0001 C CNN
-F 1 "PWR_FLAG" H 3000 3823 50  0000 C CNN
-F 2 "" H 3000 3650 50  0001 C CNN
-F 3 "~" H 3000 3650 50  0001 C CNN
-	1    3000 3650
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3300 3650 3300 3750
-Wire Wire Line
-	3300 3750 3000 3750
-Connection ~ 3000 3750
-Wire Wire Line
-	3300 3950 3300 3850
-Wire Wire Line
-	3300 3850 3000 3850
-Connection ~ 3000 3850
-$Comp
-L power:PWR_FLAG #FLG02
-U 1 1 5FDFB526
-P 3000 3950
-F 0 "#FLG02" H 3000 4025 50  0001 C CNN
-F 1 "PWR_FLAG" H 3000 4123 50  0000 C CNN
-F 2 "" H 3000 3950 50  0001 C CNN
-F 3 "~" H 3000 3950 50  0001 C CNN
-	1    3000 3950
-	-1   0    0    1   
-$EndComp
 $Comp
 L Connector_Generic:Conn_01x03 J3
 U 1 1 5FE0F243
@@ -357,17 +293,6 @@ Wire Wire Line
 Wire Wire Line
 	6500 3300 6800 3300
 NoConn ~ 4700 2400
-$Comp
-L Connector_Generic:Conn_01x02 J2
-U 1 1 5FEFCA38
-P 2700 3850
-F 0 "J2" H 2700 3650 50  0000 C CNN
-F 1 "Conn_01x02" H 2700 3950 50  0000 C CNN
-F 2 "misc_hardware:TerminalBlock_Kaweei_1x02_P2.54mm_Horizontal" H 2700 3850 50  0001 C CNN
-F 3 "~" H 2700 3850 50  0001 C CNN
-	1    2700 3850
-	-1   0    0    1   
-$EndComp
 $Comp
 L Device:Net-Tie_2 NT1
 U 1 1 5FF0F2A7
@@ -405,4 +330,92 @@ F 3 "~" H 9000 4500 50  0001 C CNN
 	1    9000 4500
 	1    0    0    -1  
 $EndComp
+$Comp
+L power:+5V #PWR03
+U 1 1 5FDEBA13
+P 3300 3650
+F 0 "#PWR03" H 3300 3500 50  0001 C CNN
+F 1 "+5V" H 3315 3823 50  0000 C CNN
+F 2 "" H 3300 3650 50  0001 C CNN
+F 3 "" H 3300 3650 50  0001 C CNN
+	1    3300 3650
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR04
+U 1 1 5FDEC1C7
+P 3300 3950
+F 0 "#PWR04" H 3300 3700 50  0001 C CNN
+F 1 "GND" H 3305 3777 50  0000 C CNN
+F 2 "" H 3300 3950 50  0001 C CNN
+F 3 "" H 3300 3950 50  0001 C CNN
+	1    3300 3950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3300 3850 3000 3850
+Wire Wire Line
+	3300 3950 3300 3850
+Wire Wire Line
+	3300 3750 3000 3750
+Connection ~ 3000 3750
+Wire Wire Line
+	3300 3650 3300 3750
+$Comp
+L power:PWR_FLAG #FLG01
+U 1 1 5FDF5B6E
+P 3000 3650
+F 0 "#FLG01" H 3000 3725 50  0001 C CNN
+F 1 "PWR_FLAG" H 3000 3823 50  0000 C CNN
+F 2 "" H 3000 3650 50  0001 C CNN
+F 3 "~" H 3000 3650 50  0001 C CNN
+	1    3000 3650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3000 3750 3000 3650
+Connection ~ 3000 3850
+Wire Wire Line
+	3000 3850 3000 3950
+$Comp
+L power:PWR_FLAG #FLG02
+U 1 1 5FDFB526
+P 3000 3950
+F 0 "#FLG02" H 3000 4025 50  0001 C CNN
+F 1 "PWR_FLAG" H 3000 4123 50  0000 C CNN
+F 2 "" H 3000 3950 50  0001 C CNN
+F 3 "~" H 3000 3950 50  0001 C CNN
+	1    3000 3950
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	2900 3750 3000 3750
+Wire Wire Line
+	2900 3850 3000 3850
+$Comp
+L Connector_Generic:Conn_01x02 J2
+U 1 1 5FEFCA38
+P 2700 3850
+F 0 "J2" H 2700 3650 50  0000 C CNN
+F 1 "Conn_01x02" H 2700 3950 50  0000 C CNN
+F 2 "misc_hardware:TerminalBlock_Kaweei_1x02_P2.54mm_Horizontal" H 2700 3850 50  0001 C CNN
+F 3 "~" H 2700 3850 50  0001 C CNN
+	1    2700 3850
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R_Small R1
+U 1 1 5FFA7B48
+P 7800 3300
+F 0 "R1" V 7604 3300 50  0000 C CNN
+F 1 "470" V 7695 3300 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal" H 7800 3300 50  0001 C CNN
+F 3 "~" H 7800 3300 50  0001 C CNN
+	1    7800 3300
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7900 3300 8000 3300
+Text GLabel 8000 3300 2    50   Input ~ 0
+LED_D
 $EndSCHEMATC
