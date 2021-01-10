@@ -14,11 +14,13 @@ The Raspberry Pi outputs at 3.3V while the WS2812 LEDs require 5V control signal
 | J2  | 2-Pin 0.1" Pitch Terminal Block | KF120-2P    | [2138][P2]   |
 | J3  | 3-Pin 0.1" Pitch Terminal Block | KF120-3P    | [2136][P3]   |
 | U1  | Quad 3V to 5V Level-Shifter     | SN74AHCT125 | [1787][P4]   |
+| R1  | 470 Ohm Resistor (1/4 Watt)     | CF1/4WXJ470 | [2781][P5]   |
 
 [P1]: https://www.adafruit.com/product/3400
 [P2]: https://www.adafruit.com/product/2138
 [P3]: https://www.adafruit.com/product/2136
 [P4]: https://www.adafruit.com/product/1787
+[P5]: https://www.adafruit.com/product/2781
 
 <br />
 
