@@ -15,7 +15,7 @@ The server does not support TLS, but it is required for the authentication endpo
 #### License
 
 <sup>
-Copyright (C) Jared Beller, 2020.
+Copyright (C) Jared Beller, 2020-2021.
 </sup>
 <br />
 <sup>

@@ -27,7 +27,7 @@ To actually control the light, you need to log in using the Google Home app. In 
 #### License
 
 <sup>
-Copyright (C) Jared Beller, 2021.
+Copyright (C) Jared Beller, 2020-2021.
 </sup>
 <br />
 <sup>
